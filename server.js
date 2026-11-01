@@ -27,9 +27,9 @@ const pesanRoutes = require('./routes/pesan');
 app.use('/', authRoutes);
 app.use('/', pesanRoutes);
 
-// Halaman Utama (Home)
+// Langsung arahkan halaman utama ke halaman login
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 // Jalankan server lokal (hanya aktif jika tidak di Vercel / berjalan lokal)
