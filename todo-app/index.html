@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List Harian Tiara</title>
+    
+    <!-- Tautan ke file CSS untuk mempercantik tampilan -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h2>📝 To-Do List Harian</h2>
+        
+        <!-- Informasi Login Pengguna -->
+        <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <span id="user-info">Login sebagai: Pengguna</span>
+            <button onclick="logout()" class="delete-btn" style="padding: 6px 12px; font-size: 12px;">Logout</button>
+        </div>
+
+        <!-- Form Tambah Tugas -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <input type="text" id="input-tugas" placeholder="Mau ngerjain apa hari ini?...">
+            <button onclick="tambahTugas()">Tambah Tugas</button>
+        </div>
+
+        <!-- Kolom Pencarian Tugas -->
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="cari-tugas" placeholder="🔍 Cari tugas cepat di sini..." style="width: 100%;">
+        </div>
+
+        <h3>Daftar Tugas:</h3>
+        <ul id="daftar-tugas">
+            <!-- Daftar tugas akan muncul di sini secara otomatis dari database -->
+        </ul>
+    </div>
+
+    <!-- Script JavaScript untuk Filter Akun & Cloud Database -->
+    <script>
+        // Ambil username yang login dari localStorage
+        const username = localStorage.getItem('username') || 'Pengguna';
+        document.getElementById('user-info').innerText = "Login sebagai: " + username;
+
+        // Fungsi sederhana untuk logout
+        function logout() {
+            localStorage.removeItem('username');
+            window.location.href = 'login.html';
+        }
+
+        // Fungsi untuk memuat tugas dari database khusus milik user yang login
+        async function muatTugas() {
+            try {
+                const response = await fetch(`/api/tugas?username=${username}`);
+                const result = await response.json();
+                const ul = document.getElementById('daftar-tugas');
+                ul.innerHTML = ''; // Kosongkan daftar sebelum diisi ulang
+                
+                if (result.data && result.data.length > 0) {
+                    result.data.forEach(tugas => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `${tugas.teks} <button class="delete-btn" onclick="hapusTugas('${tugas.id}')" style="padding: 6px 12px; font-size: 12px;">Selesai / Hapus</button>`;
+                        ul.appendChild(li);
+                    });
+                }
+            } catch (err) {
+                console.error("Gagal memuat tugas:", err);
+            }
+        }
+
+        // Fungsi Tambah Tugas ke Database dengan menyertakan username
+        async function tambahTugas() {
+            const input = document.getElementById('input-tugas');
+            if (input.value.trim() === '') return;
+
+            try {
+                await fetch('/api/tugas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ teks: input.value, username: username })
+                });
+                
+                input.value = '';
+                muatTugas(); // Refresh daftar tugas
+            } catch (err) {
+                console.error("Gagal menambah tugas:", err);
+            }
+        }
+
+        // Fungsi Hapus Tugas berdasarkan ID
+        async function hapusTugas(id) {
+            try {
+                await fetch(`/api/tugas/${id}`, {
+                    method: 'DELETE'
+                });
+                muatTugas(); // Refresh daftar tugas
+            } catch (err) {
+                console.error("Gagal menghapus tugas:", err);
+            }
+        }
+
+        // Panggil muatTugas saat halaman pertama kali dibuka
+        muatTugas();
+    </script>
+</body>
+</html>

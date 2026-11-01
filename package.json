@@ -1,0 +1,13 @@
+{
+  "name": "server-pertamaku",
+  "version": "1.0.0",
+  "description": "Aplikasi web full-stack Node.js",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "express-session": "^1.18.0"
+  }
+}

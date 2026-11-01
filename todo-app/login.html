@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - To-Do List Harian</title>
+    
+    <!-- Tautan ke file CSS agar tampilannya serasi dan estetik -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h2>🔒 Silakan Login</h2>
+
+        <!-- Form Login -->
+        <form id="form-login" onsubmit="prosesLogin(event)">
+            <div style="margin-bottom: 15px;">
+                <input type="text" id="username" placeholder="Username" required style="width: 100%;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <input type="password" id="password" placeholder="Password" required style="width: 100%;">
+            </div>
+            <button type="submit" style="width: 100%; margin-bottom: 10px;">Login</button>
+        </form>
+
+        <button onclick="window.location.href='register.html'" class="delete-btn" style="width: 100%; background-color: #2563eb;">Register Akun Baru</button>
+    </div>
+
+    <!-- Script JavaScript untuk Proses Login & LocalStorage -->
+    <script>
+        async function prosesLogin(event) {
+            event.preventDefault();
+            
+            const usernameInput = document.getElementById('username').value;
+            const passwordInput = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: usernameInput, password: passwordInput })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // SIMPAN USERNAME KE LOCALSTORAGE
+                    localStorage.setItem('username', result.username || usernameInput);
+                    
+                    alert(result.pesan || "Login Berhasil!");
+                    // Pindah otomatis ke halaman utama To-Do List
+                    window.location.href = 'index.html';
+                } else {
+                    alert(result.pesan || "Username atau password salah!");
+                }
+            } catch (err) {
+                console.error("Error login:", err);
+                alert("Terjadi kesalahan pada server!");
+            }
+        }
+    </script>
+</body>
+</html>

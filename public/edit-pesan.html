@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Pesan</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        form { margin-top: 20px; max-width: 400px; }
+        input, textarea { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { background-color: #0066cc; color: white; padding: 10px 15px; border: none; cursor: pointer; }
+        button:hover { background-color: #004999; }
+    </style>
+</head>
+<body>
+    <nav style="background: #f4f4f4; padding: 10px; margin-bottom: 20px;">
+        <a href="/kontak" style="margin-right: 15px; text-decoration: none; color: #0066cc; font-weight: bold;">Kirim Pesan</a>
+        <a href="/pesan" style="margin-right: 15px; text-decoration: none; color: #0066cc; font-weight: bold;">Daftar Pesan</a>
+        <a href="/profil" style="margin-right: 15px; text-decoration: none; color: #0066cc; font-weight: bold;">Profil</a>
+        <a href="/logout" style="color: red; font-weight: bold;">Logout</a>
+    </nav>
+
+    <h1>Edit Pesan Masuk ✏️</h1>
+    <form id="form-edit" method="POST">
+        <label>Nama Pengirim:</label><br>
+        <input type="text" name="nama" id="input-nama" required><br>
+
+        <label>Isi Pesan:</label><br>
+        <textarea name="pesan" id="input-pesan" rows="4" required></textarea><br>
+
+        <button type="submit">Simpan Perubahan</button>
+    </form>
+    <br><a href="/pesan">Kembali ke Daftar Pesan</a>
+
+    <script>
+        // Script sederhana untuk mengambil data lama dari server atau URL jika diperlukan
+    </script>
+</body>
+</html>

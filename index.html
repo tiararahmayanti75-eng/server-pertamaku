@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi To-Do List Tiara</title>
+    <!-- Menghubungkan file CSS eksternal -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h2>📝 To-Do List Harian Tiara</h2>
+        
+        <!-- Input Tambah Tugas -->
+        <div>
+            <input type="text" id="inputTugas" placeholder="Mau ngerjain apa hari ini?...">
+            <button onclick="tambahTugas()">Tambah Tugas</button>
+        </div>
+
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+        <!-- Kotak Pencarian Tugas -->
+        <div>
+            <input type="text" id="inputCari" class="input-cari" placeholder="🔍 Cari tugas cepat di sini..." onkeyup="cariTugas()">
+        </div>
+
+        <h3>Daftar Tugas:</h3>
+        <ul id="daftarTugas">
+            <!-- Data tugas muncul otomatis di sini -->
+        </ul>
+    </div>
+
+    <script>
+        let semuaDataTugas = [];
+
+        async function ambilTugas() {
+            try {
+                const res = await fetch('http://localhost:3000/api/tugas');
+                const hasil = await res.json();
+                
+                semuaDataTugas = hasil.data; 
+                tampilkanTugas(semuaDataTugas); 
+            } catch (error) {
+                console.error("Gagal mengambil data:", error);
+            }
+        }
+
+        function tampilkanTugas(dataArray) {
+            const listEl = document.getElementById('daftarTugas');
+            listEl.innerHTML = ''; 
+
+            if (dataArray.length === 0) {
+                listEl.innerHTML = '<p style="color: #888; text-align: center;">Tidak ada tugas ditemukan.</p>';
+                return;
+            }
+
+            dataArray.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span><strong>${item.kegiatan}</strong></span>
+                    <button class="btn-hapus" onclick="hapusTugas(${item.id})">Selesai / Hapus</button>
+                `;
+                listEl.appendChild(li);
+            });
+        }
+
+        function cariTugas() {
+            const keyword = document.getElementById('inputCari').value.toLowerCase();
+            
+            const hasilFilter = semuaDataTugas.filter(item => 
+                item.kegiatan.toLowerCase().includes(keyword)
+            );
+
+            tampilkanTugas(hasilFilter);
+        }
+
+        async function tambahTugas() {
+            const inputEl = document.getElementById('inputTugas');
+            const kegiatanText = inputEl.value;
+
+            if (!kegiatanText) {
+                alert("Tugas tidak boleh kosong!");
+                return;
+            }
+
+            try {
+                const res = await fetch('http://localhost:3000/api/tugas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ kegiatan: kegiatanText })
+                });
+
+                if (res.ok) {
+                    inputEl.value = '';
+                    document.getElementById('inputCari').value = ''; 
+                    ambilTugas();
+                }
+            } catch (error) {
+                console.error("Gagal menambah tugas:", error);
+            }
+        }
+
+        async function hapusTugas(id) {
+            try {
+                const res = await fetch(`http://localhost:3000/api/tugas/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (res.ok) {
+                    ambilTugas();
+                }
+            } catch (error) {
+                console.error("Gagal menghapus tugas:", error);
+            }
+        }
+
+        ambilTugas();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Profil Pengguna</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <nav style="background: #f4f4f4; padding: 10px; margin-bottom: 20px;">
+        <a href="/kontak" style="margin-right: 15px; text-decoration: none; color: #0066cc; font-weight: bold;">Kirim Pesan</a>
+        <a href="/pesan" style="margin-right: 15px; text-decoration: none; color: #0066cc; font-weight: bold;">Daftar Pesan</a>
+        <a href="/profil" style="margin-right: 15px; text-decoration: none; color: #0066cc; font-weight: bold;">Profil</a>
+        <a href="/logout" style="color: red; font-weight: bold;">Logout</a>
+    </nav>
+
+    <h1>Profil Akun Anda 👤</h1>
+    <p>Selamat datang di halaman profil eksklusif.</p>
+    <div style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; max-width: 400px; border-radius: 5px;">
+        <p><b>Username Aktif:</b> <span id="profile-username" style="color: #0066cc;">Memuat...</span></p>
+        <p><b>Status Akun:</b> Terautentikasi & Dilindungi 🔒</p>
+    </div>
+    <br>
+    <a href="/pesan">Lihat Daftar Pesan</a> | <a href="/logout">Logout</a>
+
+    <script>
+        // Ambil data user yang sedang login dari endpoint backend
+        fetch('/api/current-user')
+            .then(res => res.json())
+            .then(data => {
+                if(data.user) {
+                    document.getElementById('profile-username').innerText = data.user;
+                } else {
+                    document.getElementById('profile-username').innerText = 'Tamu (Belum Login)';
+                }
+            });
+    </script>
+</body>
+</html>

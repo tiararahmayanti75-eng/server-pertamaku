@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Daftar Pesan Masuk</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th { background-color: #0066cc; color: white; }
+        .btn-hapus { background-color: #ff4d4d; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; }
+        .btn-hapus:hover { background-color: #cc0000; }
+        nav { background: #f4f4f4; padding: 10px; margin-bottom: 20px; }
+        nav a { margin-right: 15px; text-decoration: none; color: #0066cc; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/kontak">Kirim Pesan</a>
+        <a href="/pesan">Daftar Pesan</a>
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+        <a href="/logout" style="color: red;">Logout</a>
+    </nav>
+
+    <h1>Daftar Pesan Masuk (Protected Area 🔒)</h1>
+    <p>Halo, <b id="user-display">User</b>! Kamu berhasil masuk ke halaman rahasia.</p>
+    
+    <div id="tabel-container">
+        <!-- Tabel akan dimuat secara dinamis dari server -->
+    </div>
+</body>
+</html>
