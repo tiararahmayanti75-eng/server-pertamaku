@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>Halaman Login</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body class="bg-slate-50 flex items-center justify-center h-screen">
     <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md border border-slate-100">
         <h1 class="text-2xl font-bold text-blue-600 mb-6 text-center">Silakan Login 🚀</h1>
         
+        <!-- Kotak Alert Notifikasi -->
+        <div id="alertBox" class="mb-4 hidden p-3 rounded-lg text-sm font-medium"></div>
+
         <form action="/login" method="POST" class="space-y-4">
             <div>
                 <label class="block text-slate-700 font-medium mb-1">Username:</label>
@@ -24,5 +26,23 @@
         
         <p class="mt-4 text-center text-sm text-slate-600">Belum punya akun? <a href="/register" class="text-blue-600 font-medium hover:underline">Daftar dulu</a></p>
     </div>
+
+    <script>
+        // Skrip otomatis membaca pesan error/success dari URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        const success = urlParams.get('success');
+        const alertBox = document.getElementById('alertBox');
+
+        if (error) {
+            alertBox.textContent = error;
+            alertBox.className = "mb-4 p-3 rounded-lg text-sm font-medium bg-red-100 text-red-700 border border-red-200";
+            alertBox.classList.remove('hidden');
+        } else if (success) {
+            alertBox.textContent = success;
+            alertBox.className = "mb-4 p-3 rounded-lg text-sm font-medium bg-green-100 text-green-700 border border-green-200";
+            alertBox.classList.remove('hidden');
+        }
+    </script>
 </body>
 </html>

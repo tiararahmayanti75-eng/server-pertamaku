@@ -2,32 +2,113 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Daftar Pesan Masuk</title>
-    <link rel="stylesheet" href="/style.css">
-    <style>
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-        th { background-color: #0066cc; color: white; }
-        .btn-hapus { background-color: #ff4d4d; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; }
-        .btn-hapus:hover { background-color: #cc0000; }
-        nav { background: #f4f4f4; padding: 10px; margin-bottom: 20px; }
-        nav a { margin-right: 15px; text-decoration: none; color: #0066cc; font-weight: bold; }
-    </style>
+    <title>Daftar Pesan Masuk & Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body>
-    <nav>
-        <a href="/kontak">Kirim Pesan</a>
-        <a href="/pesan">Daftar Pesan</a>
-        <a href="/login">Login</a>
-        <a href="/register">Register</a>
-        <a href="/logout" style="color: red;">Logout</a>
-    </nav>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen p-6 transition-colors duration-300">
+    <div class="max-w-4xl mx-auto bg-white dark:bg-slate-800 p-8 rounded-xl shadow-md border border-slate-100 dark:border-slate-700">
+        
+        <!-- Header Info User & Role -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-blue-600 dark:text-blue-400">📥 Daftar Pesan Masuk</h1>
+                <p id="userInfo" class="text-sm text-slate-500 dark:text-slate-400 mt-1"></p>
+            </div>
+            <div class="space-x-2">
+                <a href="/pesan/export-csv" class="bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition">📥 Download CSV</a>
+                <button onclick="toggleDarkMode()" class="bg-slate-200 dark:bg-slate-700 px-3 py-2 rounded-lg text-sm font-medium">🌓</button>
+                <a href="/logout" class="bg-red-500 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition">Logout</a>
+            </div>
+        </div>
 
-    <h1>Daftar Pesan Masuk (Protected Area 🔒)</h1>
-    <p>Halo, <b id="user-display">User</b>! Kamu berhasil masuk ke halaman rahasia.</p>
-    
-    <div id="tabel-container">
-        <!-- Tabel akan dimuat secara dinamis dari server -->
+        <!-- Search Bar -->
+        <div class="mb-6">
+            <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="🔍 Cari pesan..." class="w-full px-4 py-2 border dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900">
+        </div>
+
+        <!-- Tabel Pesan -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-blue-50 dark:bg-slate-700 text-blue-700 dark:text-blue-200 border-b dark:border-slate-600">
+                        <th class="p-3">Nama</th>
+                        <th class="p-3">Pesan</th>
+                        <th class="p-3 text-center" id="aksiHeader">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Data dimuat dari API -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Navigasi Pagination -->
+        <div class="flex justify-between items-center mt-6">
+            <button id="prevBtn" onclick="changePage(-1)" class="bg-slate-200 dark:bg-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-300">← Sebelumnya</button>
+            <span id="pageInfo" class="text-sm font-medium"></span>
+            <button id="nextBtn" onclick="changePage(1)" class="bg-slate-200 dark:bg-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-300">Berikutnya →</button>
+        </div>
     </div>
+
+    <script>
+        let currentPage = 1;
+        let currentUserRole = 'user';
+
+        async function loadData(page = 1) {
+            const res = await fetch(`/api/pesan?page=${page}`);
+            const result = await res.json();
+            
+            currentUserRole = result.role;
+            currentPage = result.currentPage;
+
+            document.getElementById('userInfo').innerHTML = `Login sebagai: <strong class="text-blue-500">${result.user}</strong> (Role: <span class="uppercase font-semibold">${result.role}</span>)`;
+            
+            let tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            result.data.forEach(p => {
+                let tr = document.createElement('tr');
+                tr.className = "border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition";
+                
+                let actionTd = '';
+                if (result.role === 'admin') {
+                    actionTd = `<td class="p-3 text-center"><a href="/pesan/hapus/${p.id}" onclick="return confirm('Yakin ingin hapus pesan ini?')" class="text-red-500 hover:underline text-sm font-medium">Hapus</a></td>`;
+                } else {
+                    actionTd = `<td class="p-3 text-center text-xs text-slate-400 italic">Khusus Admin</td>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="p-3 font-medium">${p.nama}</td>
+                    <td class="p-3">${p.pesan}</td>
+                    ${actionTd}
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('pageInfo').textContent = `Halaman ${result.currentPage} dari ${result.totalPages}`;
+            document.getElementById('prevBtn').disabled = result.currentPage <= 1;
+            document.getElementById('nextBtn').disabled = result.currentPage >= result.totalPages;
+        }
+
+        function changePage(direction) {
+            loadData(currentPage + direction);
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        function searchTable() {
+            let input = document.getElementById("searchInput").value.toLowerCase();
+            let rows = document.getElementById("tableBody").getElementsByTagName("tr");
+            for (let i = 0; i < rows.length; i++) {
+                let text = rows[i].textContent.toLowerCase();
+                rows[i].style.display = text.includes(input) ? "" : "none";
+            }
+        }
+
+        // Muat data saat halaman dibuka
+        loadData(1);
+    </script>
 </body>
 </html>

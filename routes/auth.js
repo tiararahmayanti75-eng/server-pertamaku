@@ -5,75 +5,61 @@ const path = require('path');
 
 const usersFile = path.join(__dirname, '../users.json');
 
-// Fungsi helper untuk membaca file users.json
 const getUsers = () => {
-  if (!fs.existsSync(usersFile)) return [];
-  try {
-    return JSON.parse(fs.readFileSync(usersFile, 'utf8'));
-  } catch (e) {
-    return [];
-  }
+    if (!fs.existsSync(usersFile)) return [];
+    const data = fs.readFileSync(usersFile, 'utf8');
+    return JSON.parse(data || '[]');
 };
 
-// 1. Tampilkan Halaman Register (GET)
-router.get('/register', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/register.html'));
-});
-
-// 2. Proses Simpan Register (POST)
-router.post('/register', (req, res) => {
-  const { username, password } = req.body;
-  let users = getUsers();
-
-  // Cek apakah username sudah dipakai
-  const userAda = users.find(u => u.username === username);
-  if (userAda) {
-    return res.send(`<h1>Registrasi Gagal!</h1><p>Username '${username}' sudah digunakan.</p><a href="/register">Coba Lagi</a>`);
-  }
-
-  // Simpan user baru ke array & tulis ke users.json
-  users.push({ username, password });
-  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
-
-  res.send(`<h1>Registrasi Berhasil! 🎉</h1><p>Akun ${username} sudah tersimpan permanen.</p><a href="/login">Silakan Login di Sini</a>`);
-});
-
-// 3. Tampilkan Halaman Login (GET)
+// Rute Login (GET)
 router.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/login.html'));
+    res.sendFile(path.join(__dirname, '../public/login.html'));
 });
 
-// 4. Proses Login (POST) & Set Session
+// Proses Login dengan Role
 router.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  let users = getUsers();
+    const { username, password } = req.body;
+    const users = getUsers();
+    const user = users.find(u => u.username === username && u.password === password);
 
-  // Cek apakah cocok dengan data di users.json ATAU akun default admin
-  const validUser = users.find(u => u.username === username && u.password === password) || 
-                    (username === "admin" && password === "12345");
-
-  if (validUser) {
-    // Simpan status login di session server
-    req.session = req.session || {};
-    req.session.user = username;
-
-    res.send(`
-      <h1>Selamat datang kembali, ${username}! 🚀</h1>
-      <p>Login Berhasil dan session aktif.</p>
-      <a href="/pesan">Lihat Daftar Pesan (Dilindungi)</a> | 
-      <a href="/logout">Logout</a>
-    `);
-  } else {
-    res.send(`<h1>Login Gagal! ❌</h1><p>Username atau password salah.</p><a href="/login">Coba Lagi</a>`);
-  }
+    if (user) {
+        req.session.user = username;
+        // Tentukan role: misal username 'admin' otomatis jadi admin, sisanya user biasa
+        req.session.role = (username.toLowerCase() === 'admin') ? 'admin' : 'user';
+        res.redirect('/pesan');
+    } else {
+        res.redirect('/login?error=Username atau password salah!');
+    }
 });
 
-// 5. Rute Logout (Hapus Session)
+// Rute Register (GET)
+router.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/register.html'));
+});
+
+// Proses Register dengan Validasi Konfirmasi Password
+router.post('/register', (req, res) => {
+    const { username, password, confirmPassword } = req.body;
+
+    if (password !== confirmPassword) {
+        return res.redirect('/register?error=Konfirmasi password tidak cocok!');
+    }
+
+    const users = getUsers();
+    if (users.find(u => u.username === username)) {
+        return res.redirect('/register?error=Username sudah digunakan!');
+    }
+
+    users.push({ username, password });
+    fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
+    res.redirect('/login?success=Registrasi berhasil, silakan login!');
+});
+
+// Rute Logout
 router.get('/logout', (req, res) => {
-  if (req.session) {
-    req.session.user = null;
-  }
-  res.send(`<h1>Anda telah berhasil logout.</h1><a href="/login">Login Kembali</a>`);
+    req.session.destroy(() => {
+        res.redirect('/login');
+    });
 });
 
 module.exports = router;
