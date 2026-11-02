@@ -5,39 +5,49 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware untuk membaca data dari form POST & JSON
+// Middleware untuk parsing body dari form
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Konfigurasi Session
+// Konfigurasi Express Session
 app.use(session({
-    secret: 'rahasia-negara-perpus-express',
+    secret: 'rahasia-proyek-server-pertamaku',
     resave: false,
     saveUninitialized: true
 }));
 
-// Folder statis untuk file publik (HTML, CSS, dll)
+// Menyediakan static files dari folder public
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Impor rute modular
-const authRoutes = require('./routes/auth');
-const pesanRoutes = require('./routes/pesan');
-
-// Gunakan rute modular
-app.use('/', authRoutes);
-app.use('/', pesanRoutes);
-
-// Langsung arahkan halaman utama ke halaman login
+// ==========================================
+// ROUTING MANUAL HALAMAN HTML (PUBLIC)
+// ==========================================
 app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Jalankan server lokal (hanya aktif jika tidak di Vercel / berjalan lokal)
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => {
-        console.log(`Server berjalan mulus di http://localhost:${PORT} 🚀`);
-    });
-}
+app.get('/pesan', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'pesan.html'));
+});
 
-// Ekspor aplikasi agar bisa dibaca oleh Vercel Serverless Function
-module.exports = app;
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'register.html'));
+});
+
+// ==========================================
+// IMPORT ROUTES API / BACKEND
+// ==========================================
+const authRouter = require('./routes/auth');
+const pesanRouter = require('./routes/pesan');
+
+app.use('/', authRouter);
+app.use('/', pesanRouter);
+
+// Menjalankan server lokal (untuk di komputer lokal)
+app.listen(PORT, () => {
+    console.log(`Server berjalan di http://localhost:${PORT}`);
+});
