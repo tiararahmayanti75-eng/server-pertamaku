@@ -3,62 +3,58 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 
-const usersFile = path.join(__dirname, '../users.json');
+// Helper baca/tulis user
+const userFile = path.join(__dirname, '../database-user.json');
 
 const getUsers = () => {
-    if (!fs.existsSync(usersFile)) return [];
-    const data = fs.readFileSync(usersFile, 'utf8');
-    return JSON.parse(data || '[]');
+    if (!fs.existsSync(userFile)) return [];
+    return JSON.parse(fs.readFileSync(userFile, 'utf8'));
 };
 
-// Rute Login (GET)
-router.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/login.html'));
+const saveUsers = (users) => {
+    fs.writeFileSync(userFile, JSON.stringify(users, null, 2));
+};
+
+// Proses Register
+router.post('/register', (req, res) => {
+    const { username, password } = req.body;
+    const users = getUsers();
+    
+    // Cek apakah username sudah ada
+    const existingUser = users.find(u => u.username === username);
+    if (existingUser) {
+        return res.redirect('/register.html?error=Username+sudah+terdaftar');
+    }
+
+    // Simpan user baru (default role: user)
+    users.push({ username, password, role: 'user' });
+    saveUsers(users);
+    
+    res.redirect('/login.html?success=Registrasi+berhasil,+silakan+login');
 });
 
-// Proses Login dengan Role
+// Proses Login
 router.post('/login', (req, res) => {
     const { username, password } = req.body;
     const users = getUsers();
+
     const user = users.find(u => u.username === username && u.password === password);
-
     if (user) {
-        req.session.user = username;
-        // Tentukan role: misal username 'admin' otomatis jadi admin, sisanya user biasa
-        req.session.role = (username.toLowerCase() === 'admin') ? 'admin' : 'user';
-        res.redirect('/pesan');
+        req.session.user = user;
+        if (user.role === 'admin') {
+            return res.redirect('/pesan.html');
+        } else {
+            return res.redirect('/index.html');
+        }
     } else {
-        res.redirect('/login?error=Username atau password salah!');
+        res.redirect('/login.html?error=Username+atau+password+salah');
     }
 });
 
-// Rute Register (GET)
-router.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/register.html'));
-});
-
-// Proses Register dengan Validasi Konfirmasi Password
-router.post('/register', (req, res) => {
-    const { username, password, confirmPassword } = req.body;
-
-    if (password !== confirmPassword) {
-        return res.redirect('/register?error=Konfirmasi password tidak cocok!');
-    }
-
-    const users = getUsers();
-    if (users.find(u => u.username === username)) {
-        return res.redirect('/register?error=Username sudah digunakan!');
-    }
-
-    users.push({ username, password });
-    fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
-    res.redirect('/login?success=Registrasi berhasil, silakan login!');
-});
-
-// Rute Logout
+// Logout
 router.get('/logout', (req, res) => {
     req.session.destroy(() => {
-        res.redirect('/login');
+        res.redirect('/login.html');
     });
 });
 

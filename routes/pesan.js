@@ -3,82 +3,58 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 
-const dbFile = path.join(__dirname, '../database.json');
+const pesanFile = path.join(__dirname, '../database-tugas.json');
 
 const getPesan = () => {
-    if (!fs.existsSync(dbFile)) return [];
-    const data = fs.readFileSync(dbFile, 'utf8');
-    return JSON.parse(data || '[]');
+    if (!fs.existsSync(pesanFile)) return [];
+    return JSON.parse(fs.readFileSync(pesanFile, 'utf8'));
 };
 
-// Middleware Proteksi Halaman
-const isAuthenticated = (req, res, next) => {
-    if (req.session.user) {
-        return next();
-    }
-    res.redirect('/login?error=Silakan login terlebih dahulu!');
+const savePesan = (data) => {
+    fs.writeFileSync(pesanFile, JSON.stringify(data, null, 2));
 };
 
-// Rute Halaman Daftar Pesan
-router.get('/pesan', isAuthenticated, (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/pesan.html'));
-});
-
-// API untuk Ambil Data JSON + Mendukung Pagination & Role Info
-router.get('/api/pesan', isAuthenticated, (req, res) => {
-    let pesanList = getPesan();
-    
-    // Fitur Pagination (Default 5 data per halaman)
-    const page = parseInt(req.query.page) || 1;
-    const limit = 5;
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
-
-    const paginatedData = pesanList.slice(startIndex, endIndex);
-
-    res.json({
-        user: req.session.user,
-        role: req.session.role,
-        currentPage: page,
-        totalPages: Math.ceil(pesanList.length / limit),
-        data: paginatedData
-    });
-});
-
-// Fitur Ekspor Data ke CSV
-router.get('/pesan/export-csv', isAuthenticated, (req, res) => {
-    const pesanList = getPesan();
-    let csv = 'ID,Nama,Pesan\n';
-    
-    pesanList.forEach((p, index) => {
-        csv += `${index + 1},"${p.nama}","${p.pesan}"\n`;
-    });
-
-    res.header('Content-Type', 'text/csv');
-    res.attachment('data-pesan.csv');
-    res.send(csv);
-});
-
-// Rute Tambah Pesan (POST)
-router.post('/kontak', (req, res) => {
-    const { nama, pesan } = req.body;
-    const pesanList = getPesan();
-    pesanList.push({ id: Date.now(), nama, pesan });
-    fs.writeFileSync(dbFile, JSON.stringify(pesanList, null, 2));
-    res.redirect('/kontak?success=Pesan berhasil dikirim!');
-});
-
-// Rute Hapus Pesan (Hanya Admin yang Bisa Menghapus)
-router.get('/pesan/hapus/:id', isAuthenticated, (req, res) => {
-    if (req.session.role !== 'admin') {
-        return res.send("<script>alert('Akses ditolak! Hanya admin yang dapat menghapus pesan.'); window.location='/pesan';</script>");
+// API Ambil Semua Pesan (untuk ditampilkan di frontend)
+router.get('/api/pesan', (req, res) => {
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
     }
+    const data = getPesan();
+    res.json({ user: req.session.user, data });
+});
 
-    const id = parseInt(req.params.id);
-    let pesanList = getPesan();
-    pesanList = pesanList.filter(p => p.id !== id);
-    fs.writeFileSync(dbFile, JSON.stringify(pesanList, null, 2));
-    res.redirect('/pesan');
+// API Tambah Pesan Baru
+router.post('/api/pesan', (req, res) => {
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const { pesan } = req.body;
+    const data = getPesan();
+    
+    const newMessage = {
+        id: Date.now(),
+        nama: req.session.user.username,
+        pesan: pesan
+    };
+
+    data.unshift.newMessage; // Masukkan ke urutan paling atas
+    savePesan(data);
+    res.redirect('/pesan.html');
+});
+
+// API Hapus Pesan (Khusus Admin atau Pemilik Pesan)
+router.get('/api/pesan/hapus/:id', (req, res) => {
+    if (!req.session.user) {
+        return res.redirect('/login.html');
+    }
+    const id = Number(req.params.id);
+    let data = getPesan();
+    
+    // Filter data (hapus yang ID-nya cocok)
+    data = data.filter(item => item.id !== id);
+    savePesan(data);
+    
+    res.redirect('/pesan.html');
 });
 
 module.exports = router;
