@@ -5,7 +5,7 @@ const router = express.Router();
 router.post('/register', (req, res) => {
     const { username, password } = req.body;
     
-    // Validasi sederhana
+    // Validasi sederhana agar tidak kosong
     if (!username || !password) {
         return res.redirect('/register.html?error=Form+tidak+boleh+kosong');
     }
@@ -14,7 +14,7 @@ router.post('/register', (req, res) => {
     res.redirect('/login.html?success=Registrasi+berhasil,+silakan+login');
 });
 
-// Proses Login yang langsung sukses masuk ke halaman pesan/admin
+// Proses Login yang langsung sukses masuk ke halaman pesan
 router.post('/login', (req, res) => {
     const { username, password } = req.body;
 
